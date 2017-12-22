@@ -1,0 +1,2 @@
+class Bin < ApplicationRecord
+end
