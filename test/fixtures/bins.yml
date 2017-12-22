@@ -1,9 +1,11 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  type: 
-  latitude: 
+bin1:
+  bin_type: garbage
+  latitude: 123.1234
+  longitude: -123.1234
 
-two:
-  type: 
-  latitude: 
+bin2:
+  bin_type: recycle
+  latitude: 234.2345
+  longitude: -234.2345
