@@ -1,9 +1,21 @@
 require "test_helper"
 
 describe UserBin do
-  let(:user_bin) { UserBin.new }
 
-  it "must be valid" do
-    value(user_bin).must_be :valid?
+  before do
+    @user_bin = user_bins(:one)
   end
+
+  describe "relations" do
+    it "should have one user" do
+      @user_bin.must_respond_to :user
+      @user_bin.user.must_be_kind_of User
+    end
+
+    it "should have one bin" do
+      @user_bin.must_respond_to :bin
+      @user_bin.bin.must_be_kind_of Bin
+    end
+  end
+
 end
