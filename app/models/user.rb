@@ -1,4 +1,7 @@
 class User < ApplicationRecord
+  has_many :user_bins
+  has_many :bins, :through => :user_bins
+
   # add uniqueness?
   validates :username, presence: true
 
