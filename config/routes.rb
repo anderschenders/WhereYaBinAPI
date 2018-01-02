@@ -4,4 +4,9 @@ Rails.application.routes.draw do
   # route for bin index
   resources :bins, only: [:index]
 
+  # route for user create
+  resources :users, only: [:index, :create]
+
+  # route for user to login
+  # get 'users/login', to: 'users#login', as: 'login'
 end
