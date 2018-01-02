@@ -6,7 +6,12 @@ class UsersController < ApplicationController
     if user
       render status: :ok, json: user
     else
-      render status: :bad_request, json: { errors: errors }
+      user = User.find_by(email: params[:email])
+      if user.nil?
+        render status: :bad_request, json: { error: 'Invalid email. Please try again.' }
+      else
+        render status: :bad_request, json: { error: 'Invalid password. Please try again.' }
+      end
     end
 
   end
