@@ -4,7 +4,7 @@ class UsersController < ApplicationController
 
     user = User.find_by(email: params[:email], password: params[:password])
     if user
-      
+
       render status: :ok, json: user
     else
       user = User.find_by(email: params[:email])
