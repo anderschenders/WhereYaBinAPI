@@ -48,6 +48,6 @@ describe User do
       @user.password = nil
       @user.wont_be :valid?
     end
-
+    
   end
 end

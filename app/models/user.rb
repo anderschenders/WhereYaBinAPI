@@ -9,5 +9,5 @@ class User < ApplicationRecord
   validates :email, presence: true
 
   validates :password, presence: true
-  validates_length_of :password, :minimum => 1
+  # validates_length_of :password, :minimum => 1
 end

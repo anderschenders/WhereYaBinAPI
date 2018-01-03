@@ -7,4 +7,7 @@ Rails.application.routes.draw do
   # route for user create
   resources :users, only: [:index, :create]
 
+  # route for user_bins create
+  resources :user_bins, only: [:create]
+
 end
