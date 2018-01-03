@@ -4,6 +4,7 @@ class UsersController < ApplicationController
 
     user = User.find_by(email: params[:email], password: params[:password])
     if user
+      
       render status: :ok, json: user
     else
       user = User.find_by(email: params[:email])
@@ -24,11 +25,11 @@ class UsersController < ApplicationController
       password: params[:password]
     })
 
-    render status: :ok, json: user
+    if user.save
+      render status: :ok, json: user
+    else
+      render status: :bad_request, json: { errors: user.errors }
+    end
 
-
-    # else create an account and log them in
-    # send back message and user data
   end
-
 end
