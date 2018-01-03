@@ -4,7 +4,7 @@ class UsersController < ApplicationController
 
     user = User.find_by(email: params[:email], password: params[:password])
     if user
-      
+      session[:user_id] = user.id
       render status: :ok, json: user
     else
       user = User.find_by(email: params[:email])
@@ -26,6 +26,7 @@ class UsersController < ApplicationController
     })
 
     if user.save
+      session[:user_id] = user.id
       render status: :ok, json: user
     else
       render status: :bad_request, json: { errors: user.errors }
