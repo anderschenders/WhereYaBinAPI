@@ -1,5 +1,11 @@
 class UserBinsController < ApplicationController
 
+  def index
+    user_bins = UserBin.where(user_id: params[:user_id])
+
+    render status: :ok, json: user_bins
+  end
+
   def create
 
     user = User.find_by(id: params[:user_id])

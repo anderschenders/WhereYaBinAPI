@@ -8,6 +8,6 @@ Rails.application.routes.draw do
   resources :users, only: [:index, :create]
 
   # route for user_bins create
-  resources :user_bins, only: [:create]
+  resources :user_bins, only: [:index, :create]
 
 end
