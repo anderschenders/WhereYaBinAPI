@@ -3,7 +3,11 @@ class UserBinsController < ApplicationController
   def create
 
     user = User.find_by(id: params[:user_id])
+    user.bin_count += 1
+    user.save
+
     bin = Bin.find_by(id: params[:bin_id])
+    # add count to bin? First gotta make a column
 
     # error handling if can't find user or bin
 
