@@ -19,8 +19,10 @@ class UserBinsController < ApplicationController
 
     new_user_bin = UserBin.new(user_id: params[:user_id], bin_id: params[:bin_id])
 
+    json_response = { new_user_bin: new_user_bin, updated_user: user }
+
     if new_user_bin.save
-      render status: :ok, json: new_user_bin
+      render status: :ok, json: json_response
     else
       render status: :bad_request, json: { errors: user_bin.errors }
     end
