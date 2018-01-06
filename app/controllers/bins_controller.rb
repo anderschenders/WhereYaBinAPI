@@ -21,6 +21,13 @@ class BinsController < ApplicationController
       unique = true
     end
 
+    #sort bins with same location - garbage then recycling bin
+    unique_locations_format.each do |bin_arr|
+      if bin_arr.length == 2
+        bin_arr.sort_by! { |bin| bin.bin_type }
+      end
+    end
+
     render status: :ok, json: unique_locations_format
   end
 
