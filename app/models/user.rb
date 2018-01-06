@@ -13,6 +13,8 @@ class User < ApplicationRecord
 
   before_save :default_values
 
+  private
+
   def default_values
     self.bin_count ||= 0
   end
