@@ -11,7 +11,8 @@ class User < ApplicationRecord
   validates :password, presence: true
   # validates_length_of :password, :minimum => 1
 
-  validates :bin_count, presence: true
+  # validates :bin_count, presence: true
+
   before_save :default_values
 
   private

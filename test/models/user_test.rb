@@ -8,13 +8,14 @@ describe User do
 
   describe "relations" do
 
+    # TODO: this test is now erroring?
     it "should have user_bins when user_bins are created" do
       @test_user.must_respond_to :user_bins
 
       user = users(:ands)
       bin = bins(:bin2)
 
-      user_bin = UserBin.create!(user: user, bin: bin)
+      user_bin = UserBin.create!(user: user, bin: bin, action: 'use')
 
       user.user_bins << user_bin
 
@@ -49,10 +50,10 @@ describe User do
       @user.wont_be :valid?
     end
 
-    it "should not be valid without a bin_count" do
-      @user.bin_count = nil
-      @user.wont_be :valid?
-    end
+    # it "should not be valid without a bin_count" do
+    #   @user.bin_count = nil
+    #   @user.wont_be :valid?
+    # end
 
     # BUG: below test failing
     it "should be initiated with bin_count 0" do

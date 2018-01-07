@@ -8,13 +8,14 @@ describe Bin do
       @test_bin = Bin.new
     end
 
+    # TODO: this test is now erroring?
     it "should have user_bins when user_bins are created" do
       @test_bin.must_respond_to :user_bins
 
       user = users(:ands)
       bin = bins(:bin2)
 
-      user_bin = UserBin.create!(user: user, bin: bin)
+      user_bin = UserBin.create!(user: user, bin: bin, action: 'use')
 
       bin.user_bins << user_bin
 

@@ -18,4 +18,16 @@ describe UserBin do
     end
   end
 
+  describe "validations" do
+
+    it "should be valid" do
+      @user_bin.must_be :valid?
+    end
+
+    it "should not be valid without an action" do
+      @user_bin.action = nil
+      @user_bin.wont_be :valid?
+    end
+  end
+
 end
