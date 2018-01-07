@@ -4,8 +4,10 @@ anders:
   username: anderschenders
   email: anders@chenders.com
   password: meow
+  bin_count: 2
 
 ands:
   username: andschans
   email: ands@chans.com
   password: oink
+  bin_count: 0

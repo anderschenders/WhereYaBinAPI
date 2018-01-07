@@ -50,5 +50,10 @@ describe Bin do
       @bin.wont_be :valid?
     end
 
+    it "should not be valid without a location" do
+      @bin.location = nil
+      @bin.wont_be :valid?
+    end
+
   end
 end

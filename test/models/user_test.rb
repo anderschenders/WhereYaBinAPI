@@ -2,11 +2,11 @@ require "test_helper"
 
 describe User do
 
-  describe "relations" do
+  before do
+    @test_user = User.new
+  end
 
-    before do
-      @test_user = User.new
-    end
+  describe "relations" do
 
     it "should have user_bins when user_bins are created" do
       @test_user.must_respond_to :user_bins
@@ -48,6 +48,17 @@ describe User do
       @user.password = nil
       @user.wont_be :valid?
     end
-    
+
+    it "should not be valid without a bin_count" do
+      @user.bin_count = nil
+      @user.wont_be :valid?
+    end
+
+    # BUG: below test failing
+    it "should be initiated with bin_count 0" do
+      @test_user.save
+      @test_user.bin_count.must_equal 0
+    end
+
   end
 end

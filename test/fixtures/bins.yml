@@ -4,8 +4,10 @@ bin1:
   bin_type: garbage
   latitude: 123.1234
   longitude: -123.1234
+  location: 1
 
 bin2:
   bin_type: recycle
   latitude: 234.2345
   longitude: -234.2345
+  location: 2
