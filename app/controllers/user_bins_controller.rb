@@ -2,7 +2,9 @@ class UserBinsController < ApplicationController
 
   def index
     user_bins = UserBin.where(user_id: params[:user_id])
-    user_bins_array = user_bins.each_slice(1).to_a
+    user_bins_sorted = user_bins.order(:created_at).reverse
+
+    user_bins_array = user_bins_sorted.each_slice(1).to_a
 
     user_bins_array.each do |user_bin|
       bin = Bin.find_by(id: user_bin[0].bin_id)
