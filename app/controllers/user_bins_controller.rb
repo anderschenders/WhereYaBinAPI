@@ -35,13 +35,15 @@ class UserBinsController < ApplicationController
     user.save
 
     bin = Bin.find_by(id: params[:bin_id])
+    bin_latitude = bin.latitude
+    bin_longitude = bin.longitude
     # add count to bin? First gotta make a column
 
     # error handling if can't find user or bin
 
     new_user_bin = UserBin.new(user_id: params[:user_id], bin_id: params[:bin_id], action: params[:userAction])
 
-    json_response = { new_user_bin: new_user_bin, updated_user: user }
+    json_response = { new_user_bin: new_user_bin, updated_user: user, bin_location: "#{bin_latitude},#{bin_longitude}" }
 
     if new_user_bin.save
       render status: :ok, json: json_response
