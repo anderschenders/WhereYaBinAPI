@@ -28,6 +28,16 @@ describe UserBin do
       @user_bin.action = nil
       @user_bin.wont_be :valid?
     end
+
+    it "should not be valid without a user latitude" do
+      @user_bin.user_lat = nil
+      @user_bin.wont_be :valid?
+    end
+
+    it "should not be valid without a user longitude" do
+      @user_bin.user_lng = nil
+      @user_bin.wont_be :valid?
+    end
   end
 
 end

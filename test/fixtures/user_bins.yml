@@ -8,3 +8,6 @@ one:
   user: anders
   bin: bin1
   action: use
+  user_lat: 44.2
+  user_lng: -122.23
+  
