@@ -41,7 +41,13 @@ class UserBinsController < ApplicationController
 
     # error handling if can't find user or bin
 
-    new_user_bin = UserBin.new(user_id: params[:user_id], bin_id: params[:bin_id], action: params[:userAction])
+    new_user_bin = UserBin.new(
+      user_id: params[:user_id],
+      bin_id: params[:bin_id],
+      action: params[:userAction], 
+      user_lat: params[:user_lat],
+      user_lng: params[:user_lng]
+    )
 
     json_response = { new_user_bin: new_user_bin, updated_user: user, bin_location: "#{bin_latitude},#{bin_longitude}" }
 
