@@ -30,26 +30,41 @@ class UserBinsController < ApplicationController
 
   def create
 
-    user = User.find_by(id: params[:user_id])
-    user.bin_count += 1
-    user.save
+    @user = User.find_by(id: params[:user_id])
+    @user.bin_count += 1
+    @user.save
 
     bin = Bin.find_by(id: params[:bin_id])
     bin_latitude = bin.latitude
     bin_longitude = bin.longitude
     # add count to bin? First gotta make a column
 
+    # json_response = {
+    #   user: @user,
+    #   total_dist: total_distance_travelled
+    # }
+
     # error handling if can't find user or bin
 
     new_user_bin = UserBin.new(
       user_id: params[:user_id],
       bin_id: params[:bin_id],
-      action: params[:userAction], 
+      action: params[:userAction],
       user_lat: params[:user_lat],
       user_lng: params[:user_lng]
     )
 
-    json_response = { new_user_bin: new_user_bin, updated_user: user, bin_location: "#{bin_latitude},#{bin_longitude}" }
+    new_user_bin.save
+
+    # get total distance user has travelled
+    total_distance_travelled = @user.total_distance_travelled
+
+    json_response = {
+      new_user_bin: new_user_bin,
+      updated_user: @user,
+      total_dist: total_distance_travelled,
+      bin_location: "#{bin_latitude},#{bin_longitude}"
+    }
 
     if new_user_bin.save
       render status: :ok, json: json_response
