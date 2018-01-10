@@ -60,6 +60,16 @@ class UserBinsController < ApplicationController
     }
 
     if new_user_bin.save
+      # get total distance user has travelled
+      total_distance_travelled = @user.total_distance_travelled
+
+      json_response = {
+        new_user_bin: new_user_bin,
+        updated_user: @user,
+        total_dist: total_distance_travelled,
+        bin_location: "#{bin_latitude},#{bin_longitude}"
+      }
+      
       render status: :ok, json: json_response
     else
       render status: :bad_request, json: { errors: user_bin.errors }

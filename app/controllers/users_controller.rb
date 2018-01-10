@@ -43,14 +43,23 @@ class UsersController < ApplicationController
 
   def create
     # user sign up
-    user = User.create({
+    @user = User.new({
       email: params[:email],
       username: params[:username],
       password: params[:password]
     })
 
-    if user.save
-      render status: :ok, json: user
+    if @user.save
+
+      # get total distance user has travelled
+      total_distance_travelled = @user.total_distance_travelled
+
+      json_response = {
+        user: @user,
+        total_dist: total_distance_travelled
+      }
+
+      render status: :ok, json: json_response
     else
       render status: :bad_request, json: { errors: user.errors }
     end
