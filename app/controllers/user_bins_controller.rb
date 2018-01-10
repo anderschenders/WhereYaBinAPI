@@ -39,11 +39,6 @@ class UserBinsController < ApplicationController
     bin_longitude = bin.longitude
     # add count to bin? First gotta make a column
 
-    # json_response = {
-    #   user: @user,
-    #   total_dist: total_distance_travelled
-    # }
-
     # error handling if can't find user or bin
 
     new_user_bin = UserBin.new(
@@ -53,8 +48,6 @@ class UserBinsController < ApplicationController
       user_lat: params[:user_lat],
       user_lng: params[:user_lng]
     )
-
-    new_user_bin.save
 
     # get total distance user has travelled
     total_distance_travelled = @user.total_distance_travelled
