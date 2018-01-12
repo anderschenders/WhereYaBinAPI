@@ -1,5 +1,10 @@
 class UserBinsController < ApplicationController
 
+  def community_data
+    json_response = {}
+    render status: :ok, json: json_response
+  end
+
   def index
     user_bins = UserBin.where(user_id: params[:user_id])
     user_bins_sorted = user_bins.order(:created_at).reverse

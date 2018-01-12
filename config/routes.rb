@@ -10,4 +10,6 @@ Rails.application.routes.draw do
   # route for user_bins create
   resources :user_bins, only: [:index, :create]
 
+  get '/user_bins/community_data', to: 'user_bins#community_data', as: 'commnunity_data'
+
 end
