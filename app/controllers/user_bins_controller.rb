@@ -1,7 +1,77 @@
 class UserBinsController < ApplicationController
 
   def community_data
-    json_response = {}
+    user_bins = UserBin.all
+
+    # all user_bins with action == "use"
+    use_user_bins = user_bins.select { |user_bin| user_bin.action == "use" }
+    use_user_bins_count = use_user_bins.length
+
+    # count for all Users registered
+    all_users = User.all.count
+
+    # distance travelled by each user
+    dist_travelled_all_users_array = []
+
+    user_bins.each do |user_bin|
+      dist_trav_user_hash = []
+      user = User.find_by(id: user_bin.user_id)
+      dist = user.total_distance_travelled
+      dist_travelled_all_users_array << [user.id, dist]
+    end
+
+    # user who travelled the most
+    most_travelled = dist_travelled_all_users_array[0]
+
+    dist_travelled_all_users_array.each do |arr|
+      if arr[1] > most_travelled[1]
+        most_travelled = arr
+      end
+    end
+
+    top_dist = most_travelled[1].round(2)
+    top_dist_user_id = most_travelled[0]
+
+    top_dist_user = User.find_by(id: top_dist_user_id)
+    top_dist_username = top_dist_user.username
+
+    # top_dist = dist_travelled_all_users_array.sort.last.round(2)
+    # top_dist_user = User.find_by(id: dist_travelled_all_users_array.sort.last.user_id)
+    # top_dist_username = top_dist_user.username
+
+    # distance travelled by all users
+    total_dist_travelled = 0
+    dist_travelled_all_users_array.each do |arr|
+      total_dist_travelled += arr[1]
+    end
+
+    # user with most activity
+    user_activity_hash = {}
+
+    user_bins.each do |user_bin|
+      if user_activity_hash[user_bin.user_id]
+        user_activity_hash[user_bin.user_id] += 1
+      else
+        user_activity_hash[user_bin.user_id] = 1
+      end
+    end
+
+    top_user_activity_arr = user_activity_hash.max_by {|k, v| v}
+    top_user_activity = top_user_activity_arr[1]
+    top_user_activity_user_id = top_user_activity_arr[0]
+    top_user_activity_user = User.find_by(id: top_user_activity_user_id)
+    top_user_activity_username = top_user_activity_user.username
+
+    json_response = {
+      user_count: all_users,
+      action_use_count: use_user_bins_count,
+      total_dist_travelled: total_dist_travelled.round(2),
+      top_dist: top_dist,
+      top_dist_username: top_dist_username,
+      top_user_activity: top_user_activity,
+      top_user_activity_username: top_user_activity_username
+    }
+
     render status: :ok, json: json_response
   end
 
