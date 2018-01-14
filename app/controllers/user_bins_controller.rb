@@ -131,7 +131,7 @@ class UserBinsController < ApplicationController
 
       render status: :ok, json: json_response
     else
-      render status: :bad_request, json: { errors: user_bin.errors }
+      render status: :bad_request, json: { errors: new_user_bin.errors }
     end
 
   end

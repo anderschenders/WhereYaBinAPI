@@ -50,7 +50,7 @@ class UsersController < ApplicationController
 
       render status: :ok, json: json_response
     else
-      render status: :bad_request, json: { errors: user.errors }
+      render status: :bad_request, json: { errors: @user.errors }
     end
 
   end
