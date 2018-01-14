@@ -21,14 +21,28 @@ class BinsController < ApplicationController
       unique = true
     end
 
-    #sort bins with same location - garbage then recycling bin
-    unique_locations_format.each do |bin_arr|
-      if bin_arr.length == 2
-        bin_arr.sort_by! { |bin| bin.bin_type }
+    # organize all_bins to an arrays of hashes => {garbage: bin_object}
+    all_bins_formatted = []
+
+    unique_locations_format.each do |arr|
+      hash = {}
+      arr.each do |bin|
+        puts bin
+        hash[bin.bin_type] = bin
+        puts hash
       end
+      all_bins_formatted << hash
     end
 
-    render status: :ok, json: unique_locations_format
+    #sort bins with same location - garbage then recycling bin
+    # unique_locations_format.each do |bin_arr|
+    #   if bin_arr.length == 2
+    #     bin_arr.sort_by! { |bin| bin.bin_type }
+    #   end
+    # end
+
+    render status: :ok, json: all_bins_formatted
+
   end
 
 end
