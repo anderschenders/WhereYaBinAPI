@@ -35,10 +35,6 @@ class UserBinsController < ApplicationController
     top_dist_user = User.find_by(id: top_dist_user_id)
     top_dist_username = top_dist_user.username
 
-    # top_dist = dist_travelled_all_users_array.sort.last.round(2)
-    # top_dist_user = User.find_by(id: dist_travelled_all_users_array.sort.last.user_id)
-    # top_dist_username = top_dist_user.username
-
     # distance travelled by all users
     total_dist_travelled = 0
     dist_travelled_all_users_array.each do |arr|
@@ -75,33 +71,26 @@ class UserBinsController < ApplicationController
     render status: :ok, json: json_response
   end
 
-  def index
-    user_bins = UserBin.where(user_id: params[:user_id])
-    user_bins_sorted = user_bins.order(:created_at).reverse
+  # def index
 
-    user_bins_array = user_bins_sorted.each_slice(1).to_a
-
-    user_bins_array.each do |user_bin|
-      bin = Bin.find_by(id: user_bin[0].bin_id)
-      if bin.bin_type === "RYPUBL"
-        user_bin << { "bin_type" => "RECYCLING" }
-      else
-        user_bin << { "bin_type" => "GARBAGE" }
-      end
-    end
-
-    # get bin type of each userbin and add to response
-    # user_bins.each do |user_bin|
-    #   bin = Bin.find_by(id: user_bin.bin_id)
-    #   if bin.bin_type === "RYPUBL"
-    #     user_bin["bin_type"] = "RECYCLING"
-    #   else
-    #     user_bin["bin_type"] = "GARBAGE"
-    #   end
-    # end
-
-    render status: :ok, json: user_bins_array
-  end
+    # user_bins_array = get_user_bins(@user)
+  #
+  #   user_bins = UserBin.where(user_id: params[:user_id])
+  #   user_bins_sorted = user_bins.order(:created_at).reverse
+  #
+  #   user_bins_array = user_bins_sorted.each_slice(1).to_a
+  #
+  #   user_bins_array.each do |user_bin|
+  #     bin = Bin.find_by(id: user_bin[0].bin_id)
+  #     if bin.bin_type === "RYPUBL"
+  #       user_bin << { "bin_type" => "RECYCLING" }
+  #     else
+  #       user_bin << { "bin_type" => "GARBAGE" }
+  #     end
+  #   end
+  #
+  #   render status: :ok, json: user_bins_array
+  # end
 
   def create
 
@@ -130,19 +119,7 @@ class UserBinsController < ApplicationController
       total_distance_travelled = @user.total_distance_travelled
 
       #get all user_bins
-      user_bins = UserBin.where(user_id: @user.id)
-      user_bins_sorted = user_bins.order(:created_at).reverse
-
-      user_bins_array = user_bins_sorted.each_slice(1).to_a
-
-      user_bins_array.each do |user_bin|
-        bin = Bin.find_by(id: user_bin[0].bin_id)
-        if bin.bin_type === "RYPUBL"
-          user_bin << { "bin_type" => "RECYCLING" }
-        else
-          user_bin << { "bin_type" => "GARBAGE" }
-        end
-      end
+      user_bins_array = get_user_bins(@user)
 
       json_response = {
         new_user_bin: new_user_bin,
@@ -157,6 +134,26 @@ class UserBinsController < ApplicationController
       render status: :bad_request, json: { errors: user_bin.errors }
     end
 
+  end
+
+  private
+
+  def get_user_bins(user)
+    user_bins = UserBin.where(user_id: @user.id)
+    user_bins_sorted = user_bins.order(:created_at).reverse
+
+    user_bins_array = user_bins_sorted.each_slice(1).to_a
+
+    user_bins_array.each do |user_bin|
+      bin = Bin.find_by(id: user_bin[0].bin_id)
+      if bin.bin_type === "RYPUBL"
+        user_bin << { "bin_type" => "RECYCLING" }
+      else
+        user_bin << { "bin_type" => "GARBAGE" }
+      end
+    end
+
+    return user_bins_array
   end
 
 end
