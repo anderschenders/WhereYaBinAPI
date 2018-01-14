@@ -17,9 +17,11 @@ class UsersController < ApplicationController
     else # request coming from signin
       @user = User.find_by(email: params[:email], password: params[:password])
       if @user
-
         # get total distance user has travelled
         total_distance_travelled = @user.total_distance_travelled
+
+        #get all user_bins
+        
 
         json_response = {
           user: @user,
