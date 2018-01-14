@@ -21,11 +21,36 @@ class UsersController < ApplicationController
         total_distance_travelled = @user.total_distance_travelled
 
         #get all user_bins
-        
+        user_bins = UserBin.where(user_id: @user.id)
+        user_bins_sorted = user_bins.order(:created_at).reverse
+
+        user_bins_array = user_bins_sorted.each_slice(1).to_a
+
+        user_bins_array.each do |user_bin|
+          bin = Bin.find_by(id: user_bin[0].bin_id)
+          if bin.bin_type === "RYPUBL"
+            user_bin << { "bin_type" => "RECYCLING" }
+          else
+            user_bin << { "bin_type" => "GARBAGE" }
+          end
+        end
+
+        # get bin type of each userbin and add to response
+        # user_bins.each do |user_bin|
+        #   bin = Bin.find_by(id: user_bin.bin_id)
+        #   if bin.bin_type === "RYPUBL"
+        #     user_bin["bin_type"] = "RECYCLING"
+        #   else
+        #     user_bin["bin_type"] = "GARBAGE"
+        #   end
+        # end
+
+        # render status: :ok, json: user_bins_array
 
         json_response = {
           user: @user,
-          total_dist: total_distance_travelled
+          total_dist: total_distance_travelled,
+          user_bins: user_bins_array
         }
 
         render status: :ok, json: json_response
