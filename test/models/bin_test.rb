@@ -15,7 +15,7 @@ describe Bin do
       user = users(:ands)
       bin = bins(:bin2)
 
-      user_bin = UserBin.create!(user: user, bin: bin, action: 'use')
+      user_bin = UserBin.create!(user: user, bin: bin, action: 'use', user_lat: 12.12, user_lng: 122.12)
 
       bin.user_bins << user_bin
 
