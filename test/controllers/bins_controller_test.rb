@@ -19,16 +19,5 @@ describe BinsController do
       body.must_be_kind_of Array
     end
 
-    # TODO: now returning an array of arrays, below no longer works
-    # it "should return bins with all the attributes " do
-    #   keys = %w(bin_type created_at created_by id latitude longitude updated_at)
-    #
-    #   get bins_path
-    #   body = JSON.parse(response.body)
-    #   body.each do |bin|
-    #     bin.keys.sort.must_equal keys
-    #   end
-    # end
-
   end
 end

@@ -42,6 +42,12 @@ class User < ApplicationRecord
     end
   end
 
+  private
+
+  def default_values
+    self.bin_count ||= 0
+  end
+
   def distance_between_two_points(lat1, lon1, lat2, lon2)
 
     radlat1 = Math::PI * (lat1 / 180)
@@ -55,12 +61,6 @@ class User < ApplicationRecord
     # if (unit=="K") { dist = dist * 1.609344 }
     # if (unit=="N") { dist = dist * 0.8684 }
     return dist
-  end
-
-  private
-
-  def default_values
-    self.bin_count ||= 0
   end
 
 end
