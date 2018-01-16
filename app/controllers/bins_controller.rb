@@ -1,5 +1,7 @@
 class BinsController < ApplicationController
 
+  # include Distance
+
   def index
 
     all_bins = Bin.all
@@ -193,10 +195,10 @@ class BinsController < ApplicationController
 
           render status: :ok, json: json_response
         else
-          render status: :bad_request, json: { errors: [new_user_bin.errors] }
+          render status: :bad_request, json: { errors: new_user_bin.errors }
         end
       else
-        render status: :bad_request, json: { errors: [new_garb_bin.errors] }
+        render status: :bad_request, json: { errors: new_garb_bin.errors }
       end
 
     elsif params[:bin_type] == "BOTH" && gar_already_there
@@ -240,10 +242,10 @@ class BinsController < ApplicationController
 
           render status: :ok, json: json_response
         else
-          render status: :bad_request, json: { errors: [new_user_bin.errors] }
+          render status: :bad_request, json: { errors: new_user_bin.errors }
         end
       else
-        render status: :bad_request, json: { errors: [new_rec_bin.errors] }
+        render status: :bad_request, json: { errors: new_rec_bin.errors }
       end
 
     else

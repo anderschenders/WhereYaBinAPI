@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  # include Distance
+
   has_many :user_bins
   has_many :bins, :through => :user_bins
 
