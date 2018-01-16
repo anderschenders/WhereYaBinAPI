@@ -98,50 +98,52 @@ class BinsController < ApplicationController
         else
           render status: :bad_request, json: { errors: [new_user_bin.errors, new_user_bin2.errors] }
         end
-
       else
-        # create one new bin
-        new_bin = Bin.new(
-          bin_type: params[:bin_type],
-          latitude: params[:latitude],
-          longitude: params[:longitude],
-          created_by: @user,
-          location: new_location
+        render status: :bad_request, json: { errors: [new_garb_bin.errors, new_rec_bin.errors] }
+      end
+
+    else
+      # create one new bin
+      new_bin = Bin.new(
+        bin_type: params[:bin_type],
+        latitude: params[:latitude],
+        longitude: params[:longitude],
+        created_by: @user,
+        location: new_location
+      )
+
+      if new_bin.save
+
+        new_user_bin = UserBin.new(
+          user_id: params[:user_id],
+          bin_id: new_bin.id,
+          action: 'add',
+          user_lat: params[:latitude],
+          user_lng: params[:longitude]
         )
 
-        if new_bin.save
+        if new_user_bin.save
+          # get total distance user has travelled
+          @user.reload
+          total_distance_travelled = @user.total_distance_travelled
 
-          new_user_bin = UserBin.new(
-            user_id: params[:user_id],
-            bin_id: new_bin.id,
-            action: 'add',
-            user_lat: params[:latitude],
-            user_lng: params[:longitude]
-          )
+          #get all user_bins
+          user_bins_array = get_user_bins(@user)
 
-          if new_user_bin.save
-            # get total distance user has travelled
-            @user.reload
-            total_distance_travelled = @user.total_distance_travelled
+          json_response = {
+            new_user_bin: new_user_bin,
+            updated_user: @user,
+            total_dist: total_distance_travelled,
+            user_bins: user_bins_array
+          }
 
-            #get all user_bins
-            user_bins_array = get_user_bins(@user)
-
-            json_response = {
-              new_user_bin: new_user_bin,
-              updated_user: @user,
-              total_dist: total_distance_travelled,
-              user_bins: user_bins_array
-            }
-
-            render status: :ok, json: json_response
-          else
-            render status: :bad_request, json: { errors: new_user_bin.errors }
-          end
-
+          render status: :ok, json: json_response
         else
-          render status: :bad_request, json: { errors: new_bin.errors }
+          render status: :bad_request, json: { errors: new_user_bin.errors }
         end
+
+      else
+        render status: :bad_request, json: { errors: new_bin.errors }
       end
     end
   end
