@@ -1,6 +1,7 @@
 class BinsController < ApplicationController
 
   def index
+
     all_bins = Bin.all
 
     #organize all_bins into arrays of arrays with same locations together
@@ -39,11 +40,56 @@ class BinsController < ApplicationController
   end
 
   def create
+
     all_bins = Bin.all
+
+    # check that there isn't a bin of this type already at this location
+    new_lat = params[:latitude].to_f
+    new_lng = params[:longitude].to_f
+    bin_type = params[:bin_type]
+
+    rec_already_there = false
+    gar_already_there = false
+
+    if bin_type != "BOTH"
+
+      all_bins.each do |bin|
+        dist_btwn_bins = distance_between_two_points(new_lat, new_lng, bin.latitude, bin.longitude)
+
+        if (bin.bin_type == bin_type) && (dist_btwn_bins < 0.003)
+          render status: :bad_request, json: { errors: "There is already that type of bin there!" }
+          return
+        end
+      end
+
+    else
+
+      all_bins.each do |bin|
+        dist_btwn_bins = distance_between_two_points(new_lat, new_lng, bin.latitude, bin.longitude)
+
+        if (bin.bin_type == "RYPUBL") && (dist_btwn_bins < 0.003)
+          rec_already_there = true
+        elsif (bin.bin_type == "GPUBL") && (dist_btwn_bins < 0.003)
+          gar_already_there = true
+        end
+      end
+
+      user_message = nil
+
+      if rec_already_there && gar_already_there
+        render status: :bad_request, json: { errors: "There are already garbage and recycling bins there!" }
+        return
+      elsif rec_already_there && !(gar_already_there)
+        user_message = "There is already a recycling bin here, but not a garbage bin, so we've added that!"
+      elsif gar_already_there && !(rec_already_there)
+        user_message = "There is already a garbage bin here, but not a recycling bin, so we've added that!"
+      end
+    end
+
     new_location = all_bins.last.location + 1
     @user = User.find_by(id: params[:user_id])
 
-    if params[:bin_type] == "BOTH"
+    if params[:bin_type] == "BOTH" &&  !(rec_already_there) && !(gar_already_there)
       # create two new bins
       new_garb_bin = Bin.new(
         bin_type: "GPUBL",
@@ -82,6 +128,9 @@ class BinsController < ApplicationController
         if (new_user_bin.save && new_user_bin2.save)
           # get total distance user has travelled
           @user.reload
+          @user.bin_count += 2
+          @user.save
+
           total_distance_travelled = @user.total_distance_travelled
 
           #get all user_bins
@@ -91,7 +140,8 @@ class BinsController < ApplicationController
             new_user_bin: [new_user_bin, new_user_bin2],
             updated_user: @user,
             total_dist: total_distance_travelled,
-            user_bins: user_bins_array
+            user_bins: user_bins_array,
+            user_message: user_message,
           }
 
           render status: :ok, json: json_response
@@ -100,6 +150,100 @@ class BinsController < ApplicationController
         end
       else
         render status: :bad_request, json: { errors: [new_garb_bin.errors, new_rec_bin.errors] }
+      end
+
+    elsif params[:bin_type] == "BOTH" && rec_already_there
+      # only create new garbage bin
+      new_garb_bin = Bin.new(
+        bin_type: "GPUBL",
+        latitude: params[:latitude],
+        longitude: params[:longitude],
+        created_by: @user,
+        location: new_location
+      )
+
+      if new_garb_bin.save
+
+        new_user_bin = UserBin.new(
+          user_id: params[:user_id],
+          bin_id: new_garb_bin.id,
+          action: 'add',
+          user_lat: params[:latitude],
+          user_lng: params[:longitude]
+        )
+
+        if new_user_bin.save
+          # get total distance user has travelled
+          @user.reload
+          @user.bin_count += 1
+          @user.save
+
+          total_distance_travelled = @user.total_distance_travelled
+
+          #get all user_bins
+          user_bins_array = get_user_bins(@user)
+
+          json_response = {
+            new_user_bin: [new_user_bin, new_user_bin2],
+            updated_user: @user,
+            total_dist: total_distance_travelled,
+            user_bins: user_bins_array,
+            user_message: user_message,
+          }
+
+          render status: :ok, json: json_response
+        else
+          render status: :bad_request, json: { errors: [new_user_bin.errors] }
+        end
+      else
+        render status: :bad_request, json: { errors: [new_garb_bin.errors] }
+      end
+
+    elsif params[:bin_type] == "BOTH" && gar_already_there
+      # only create new recycling bin
+      new_rec_bin = Bin.new(
+        bin_type: "RYPUBL",
+        latitude: params[:latitude],
+        longitude: params[:longitude],
+        created_by: @user,
+        location: new_location
+      )
+
+      if new_rec_bin.save
+
+        new_user_bin = UserBin.new(
+          user_id: params[:user_id],
+          bin_id: new_rec_bin.id,
+          action: 'add',
+          user_lat: params[:latitude],
+          user_lng: params[:longitude]
+        )
+
+        if new_user_bin.save
+          # get total distance user has travelled
+          @user.reload
+          @user.bin_count += 1
+          @user.save
+
+          total_distance_travelled = @user.total_distance_travelled
+
+          #get all user_bins
+          user_bins_array = get_user_bins(@user)
+
+          json_response = {
+            new_user_bin: [new_user_bin, new_user_bin2],
+            updated_user: @user,
+            total_dist: total_distance_travelled,
+            user_bins: user_bins_array,
+            user_message: user_message,
+          }
+
+          render status: :ok, json: json_response
+        else
+          render status: :bad_request, json: { errors: [new_user_bin.errors] }
+        end
+      else
+        render status: :bad_request, json: { errors: [new_rec_bin.errors] }
       end
 
     else
@@ -125,6 +269,9 @@ class BinsController < ApplicationController
         if new_user_bin.save
           # get total distance user has travelled
           @user.reload
+          @user.bin_count += 1
+          @user.save
+
           total_distance_travelled = @user.total_distance_travelled
 
           #get all user_bins
@@ -166,5 +313,20 @@ class BinsController < ApplicationController
     end
 
     return user_bins_array
+  end
+
+  def distance_between_two_points(lat1, lon1, lat2, lon2)
+
+    radlat1 = Math::PI * (lat1 / 180)
+    radlat2 = Math::PI * (lat2 / 180)
+    theta = lon1 - lon2
+    radtheta = Math::PI * (theta / 180)
+    dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta)
+    dist = Math.acos(dist)
+    dist = dist * (180 / Math::PI)
+    dist = dist * 60 * 1.1515
+    # if (unit=="K") { dist = dist * 1.609344 }
+    # if (unit=="N") { dist = dist * 0.8684 }
+    return dist
   end
 end

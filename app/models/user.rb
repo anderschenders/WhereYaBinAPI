@@ -42,8 +42,6 @@ class User < ApplicationRecord
     end
   end
 
-  private
-
   def default_values
     self.bin_count ||= 0
   end
