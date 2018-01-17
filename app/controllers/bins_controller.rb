@@ -53,13 +53,21 @@ class BinsController < ApplicationController
     bin_type = params[:bin_type]
 
     rec_already_there = false
+    rec_already_there_lat = nil
+    rec_already_there_lng = nil
+    rec_already_there_loc = nil
+
     gar_already_there = false
+    gar_already_there_lat = nil
+    gar_already_there_lng = nil
+    rec_already_there_loc = nil
 
     if bin_type != "BOTH"
 
       all_bins.each do |bin|
-        dist_btwn_bins = Distance::distance_between_two_points(new_lat, new_lng, bin.latitude, bin.longitude)
-        # dist_btwn_bins = distance_between_two_points(new_lat, new_lng, bin.latitude, bin.longitude)
+        # TODO: why doesn't the below work?
+        # dist_btwn_bins = Distance::distance_between_two_points(new_lat, new_lng, bin.latitude, bin.longitude)
+        dist_btwn_bins = distance_between_two_points(new_lat, new_lng, bin.latitude, bin.longitude)
 
         if (bin.bin_type == bin_type) && (dist_btwn_bins < 0.003)
           render status: :bad_request, json: { errors: "There is already that type of bin there!" }
@@ -68,7 +76,7 @@ class BinsController < ApplicationController
       end
 
     else
-
+      #bin_type = GPUBL or RYPUBL
       all_bins.each do |bin|
         # TODO: why doesn't the below work?
         # dist_btwn_bins = Distance::distance_between_two_points(new_lat, new_lng, bin.latitude, bin.longitude)
@@ -76,8 +84,14 @@ class BinsController < ApplicationController
 
         if (bin.bin_type == "RYPUBL") && (dist_btwn_bins < 0.003)
           rec_already_there = true
+          rec_already_there_lat = bin.latitude
+          rec_already_there_lng = bin.longitude
+          rec_already_there_loc = bin.location
         elsif (bin.bin_type == "GPUBL") && (dist_btwn_bins < 0.003)
           gar_already_there = true
+          gar_already_there_lat = bin.latitude
+          gar_already_there_lng = bin.longitude
+          gar_already_there_loc = bin.location
         end
       end
 
@@ -161,13 +175,28 @@ class BinsController < ApplicationController
 
     elsif params[:bin_type] == "BOTH" && rec_already_there
       # only create new garbage bin
-      new_garb_bin = Bin.new(
+
+      # if lat+lng is exactly the same, give same location id
+      if (params[:latitude] == rec_already_there_lat) && (params[:longitude] == rec_already_there_lng)
+
+        new_garb_bin = Bin.new(
         bin_type: "GPUBL",
         latitude: params[:latitude],
         longitude: params[:longitude],
         created_by: @user,
-        location: new_location
+        location: rec_already_there_loc
       )
+
+      else
+        # give new location id
+        new_garb_bin = Bin.new(
+          bin_type: "GPUBL",
+          latitude: params[:latitude],
+          longitude: params[:longitude],
+          created_by: @user,
+          location: new_location
+        )
+      end
 
       if new_garb_bin.save
 
@@ -208,13 +237,28 @@ class BinsController < ApplicationController
 
     elsif params[:bin_type] == "BOTH" && gar_already_there
       # only create new recycling bin
-      new_rec_bin = Bin.new(
-        bin_type: "RYPUBL",
-        latitude: params[:latitude],
-        longitude: params[:longitude],
-        created_by: @user,
-        location: new_location
-      )
+
+      # if lat+lng is exactly the same, give same location id
+      if (params[:latitude] == gar_already_there_lat) && (params[:longitude] == gar_already_there_lng)
+
+        new_rec_bin = Bin.new(
+          bin_type: "RYPUBL",
+          latitude: params[:latitude],
+          longitude: params[:longitude],
+          created_by: @user,
+          location: gar_already_there_loc
+        )
+
+      else
+        # give new location id
+        new_rec_bin = Bin.new(
+          bin_type: "RYPUBL",
+          latitude: params[:latitude],
+          longitude: params[:longitude],
+          created_by: @user,
+          location: new_location
+        )
+      end
 
       if new_rec_bin.save
 
@@ -312,7 +356,7 @@ class BinsController < ApplicationController
 
     user_bins_array.each do |user_bin|
       bin = Bin.find_by(id: user_bin[0].bin_id)
-      if bin.bin_type === "RYPUBL"
+      if bin.bin_type == "RYPUBL"
         user_bin << { "bin_type" => "RECYCLING" }
       else
         user_bin << { "bin_type" => "GARBAGE" }

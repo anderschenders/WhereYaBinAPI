@@ -38,7 +38,8 @@ class User < ApplicationRecord
         bin_lat = bin.latitude
         bin_lng = bin.longitude
 
-        current_distance = Distance::distance_between_two_points(user_lat, user_lng, bin_lat, bin_lng)
+        # current_distance = Distance::distance_between_two_points(user_lat, user_lng, bin_lat, bin_lng)
+        current_distance = distance_between_two_points(user_lat, user_lng, bin_lat, bin_lng)
         total_distance += current_distance
       end
 
