@@ -13,4 +13,6 @@ module Distance
     # if (unit=="N") { dist = dist * 0.8684 }
     return dist
   end
+
+  # module_function :between_two_points
 end
