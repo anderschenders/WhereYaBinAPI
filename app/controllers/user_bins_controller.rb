@@ -101,9 +101,9 @@ class UserBinsController < ApplicationController
     bin = Bin.find_by(id: params[:bin_id])
     bin_latitude = bin.latitude
     bin_longitude = bin.longitude
-    # add count to bin? First gotta make a column
+    # add count to bin? First gotta make a new column
 
-    # error handling if can't find user or bin
+    # TODO: error handling if can't find user or bin
 
     new_user_bin = UserBin.new(
       user_id: params[:user_id],
@@ -118,15 +118,35 @@ class UserBinsController < ApplicationController
       @user.reload
       total_distance_travelled = @user.total_distance_travelled
 
-      #get all user_bins
-      user_bins_array = get_user_bins(@user)
+      # get all user_bins
+      # user_bins_array = get_user_bins(@user)
+      user_bins_formatted = get_user_bins(@user)
+
+      # recycling total
+
+
+      # garbage total
+
+
+      # report total
+
+
+      # full total
+
+
+      # missing total
+
+
+      # add total
+
 
       json_response = {
         new_user_bin: new_user_bin,
         updated_user: @user,
         total_dist: total_distance_travelled,
         bin_location: "#{bin_latitude},#{bin_longitude}",
-        user_bins: user_bins_array
+        # user_bins: user_bins_array
+        user_bin: user_bins_formatted
       }
 
       render status: :ok, json: json_response
@@ -139,21 +159,34 @@ class UserBinsController < ApplicationController
   private
 
   def get_user_bins(user)
-    user_bins = UserBin.where(user_id: @user.id)
-    user_bins_sorted = user_bins.order(:created_at).reverse
+    user_bins = UserBin.where(user_id: user.id)
 
-    user_bins_array = user_bins_sorted.each_slice(1).to_a
-
-    user_bins_array.each do |user_bin|
-      bin = Bin.find_by(id: user_bin[0].bin_id)
-      if bin.bin_type === "RYPUBL"
-        user_bin << { "bin_type" => "RECYCLING" }
-      else
-        user_bin << { "bin_type" => "GARBAGE" }
-      end
+    user_bins_formatted = []
+    user_bins.each do |user_bin|
+      bin = Bin.find_by(id: user_bin.bin_id)
+      user_bin_attributes = user_bin.attributes
+      user_bin_attributes["bin_type"] = bin.bin_type
+      user_bins_formatted << user_bin_attributes
     end
 
-    return user_bins_array
+    return user_bins_formatted
   end
+
+  #array of arrays:
+  #   user_bins_sorted = user_bins.order(:created_at).reverse
+  #
+  #   user_bins_array = user_bins_sorted.each_slice(1).to_a
+  #
+  #   user_bins_array.each do |user_bin|
+  #     bin = Bin.find_by(id: user_bin[0].bin_id)
+  #     if bin.bin_type === "RYPUBL"
+  #       user_bin << { "bin_type" => "RECYCLING" }
+  #     else
+  #       user_bin << { "bin_type" => "GARBAGE" }
+  #     end
+  #   end
+  #
+  #   return user_bins_array
+  # end
 
 end
