@@ -59,20 +59,34 @@ end
 private
 
 def get_user_bins(user)
+  user_bins = UserBin.where(user_id: user.id)
 
-  user_bins = UserBin.where(user_id: @user.id)
-  user_bins_sorted = user_bins.order(:created_at).reverse
-
-  user_bins_array = user_bins_sorted.each_slice(1).to_a
-
-  user_bins_array.each do |user_bin|
-    bin = Bin.find_by(id: user_bin[0].bin_id)
-    if bin.bin_type === "RYPUBL"
-      user_bin << { "bin_type" => "RECYCLING" }
-    else
-      user_bin << { "bin_type" => "GARBAGE" }
-    end
+  user_bins_formatted = []
+  user_bins.each do |user_bin|
+    bin = Bin.find_by(id: user_bin.bin_id)
+    user_bin_attributes = user_bin.attributes
+    user_bin_attributes["bin_type"] = bin.bin_type
+    user_bins_formatted << user_bin_attributes
   end
 
-  return user_bins_array
+  return user_bins_formatted
 end
+
+# def get_user_bins(user)
+#
+#   user_bins = UserBin.where(user_id: @user.id)
+#   user_bins_sorted = user_bins.order(:created_at).reverse
+#
+#   user_bins_array = user_bins_sorted.each_slice(1).to_a
+#
+#   user_bins_array.each do |user_bin|
+#     bin = Bin.find_by(id: user_bin[0].bin_id)
+#     if bin.bin_type === "RYPUBL"
+#       user_bin << { "bin_type" => "RECYCLING" }
+#     else
+#       user_bin << { "bin_type" => "GARBAGE" }
+#     end
+#   end
+#
+#   return user_bins_array
+# end
