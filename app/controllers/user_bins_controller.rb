@@ -160,9 +160,11 @@ class UserBinsController < ApplicationController
 
   def get_user_bins(user)
     user_bins = UserBin.where(user_id: user.id)
+    user_bins_sorted = user_bins.order(:created_at).reverse
+
 
     user_bins_formatted = []
-    user_bins.each do |user_bin|
+    user_bins_sorted.each do |user_bin|
       bin = Bin.find_by(id: user_bin.bin_id)
       user_bin_attributes = user_bin.attributes
       user_bin_attributes["bin_type"] = bin.bin_type
