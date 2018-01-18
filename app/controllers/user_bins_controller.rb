@@ -146,7 +146,7 @@ class UserBinsController < ApplicationController
         total_dist: total_distance_travelled,
         bin_location: "#{bin_latitude},#{bin_longitude}",
         # user_bins: user_bins_array
-        user_bin: user_bins_formatted
+        user_bins: user_bins_formatted
       }
 
       render status: :ok, json: json_response
