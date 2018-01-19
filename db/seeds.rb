@@ -1,7 +1,7 @@
 ################### USER SEEDS #####################
-puts "@@@@@@@@@@@@ Creating users @@@@@@@@@@@@@@@"
-users = User.create!([{ username: 'ac', email: 'A@c.com', password: '123' }, { username: 'ace', email: 'A@ce.com', password: '456' }])
-puts "Successfully created users!"
+# puts "@@@@@@@@@@@@ Creating users @@@@@@@@@@@@@@@"
+# users = User.create!([{ username: 'ac', email: 'A@c.com', password: '123' }, { username: 'ace', email: 'A@ce.com', password: '456' }])
+# puts "Successfully created users!"
 
 ################# BIN JSON FILE #####################
 require 'json'
