@@ -1,20 +1,36 @@
 class UserBinsController < ApplicationController
 
   def community_data
+    # count for all Users registered
+    all_users = User.all.count
+
     user_bins = UserBin.all
+
+    if user_bins.length == 0
+
+      json_response = {
+        user_count: all_users,
+        action_use_count: 0,
+        total_dist_travelled: 0,
+        top_dist: 0,
+        top_dist_username: nil,
+        top_user_activity: nil,
+        top_user_activity_username: nil
+      }
+
+      render status: :ok, json: json_response
+      return
+    end
 
     # all user_bins with action == "use"
     use_user_bins = user_bins.select { |user_bin| user_bin.action == "use" }
     use_user_bins_count = use_user_bins.length
 
-    # count for all Users registered
-    all_users = User.all.count
-
     # distance travelled by each user
     dist_travelled_all_users_array = []
 
     user_bins.each do |user_bin|
-      dist_trav_user_hash = []
+      # dist_trav_user_hash = []
       user = User.find_by(id: user_bin.user_id)
       dist = user.total_distance_travelled
       dist_travelled_all_users_array << [user.id, dist]
