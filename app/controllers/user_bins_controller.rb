@@ -13,9 +13,9 @@ class UserBinsController < ApplicationController
         action_use_count: 0,
         total_dist_travelled: 0,
         top_dist: 0,
-        top_dist_username: nil,
-        top_user_activity: nil,
-        top_user_activity_username: nil
+        top_dist_username: 'n/a',
+        top_user_activity: 0,
+        top_user_activity_username: 'n/a'
       }
 
       render status: :ok, json: json_response
