@@ -178,7 +178,7 @@ class UserBinsController < ApplicationController
 
       json_response = {
         new_user_bin: new_user_bin,
-        updated_user: @user,
+        user: @user,
         total_dist: total_distance_travelled,
         bin_location: "#{bin_latitude},#{bin_longitude}",
         # user_bins: user_bins_array
