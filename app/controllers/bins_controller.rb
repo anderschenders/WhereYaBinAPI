@@ -196,7 +196,7 @@ class BinsController < ApplicationController
 
           json_response = {
             new_user_bin: [new_user_bin, new_user_bin2],
-            updated_user: @user,
+            user: @user,
             total_dist: total_distance_travelled,
             user_message: user_message,
             user_bins: user_bins_formatted,
@@ -302,7 +302,7 @@ class BinsController < ApplicationController
 
           json_response = {
             new_user_bin: [new_user_bin, new_user_bin2],
-            updated_user: @user,
+            user: @user,
             total_dist: total_distance_travelled,
             user_message: user_message,
             user_bins: user_bins_formatted,
@@ -408,7 +408,7 @@ class BinsController < ApplicationController
 
           json_response = {
             new_user_bin: [new_user_bin, new_user_bin2],
-            updated_user: @user,
+            user: @user,
             total_dist: total_distance_travelled,
             user_message: user_message,
             user_bins: user_bins_formatted,
@@ -499,7 +499,7 @@ class BinsController < ApplicationController
 
           json_response = {
             new_user_bin: new_user_bin,
-            updated_user: @user,
+            user: @user,
             total_dist: total_distance_travelled,
             user_bins: user_bins_formatted,
             use_total: user_bins_use_total,

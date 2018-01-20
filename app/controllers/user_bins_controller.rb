@@ -29,6 +29,20 @@ class UserBinsController < ApplicationController
     # distance travelled by each user
     dist_travelled_all_users_array = []
 
+    unique_user_id = []
+    # all_unique_users = []
+
+    user_bins.each do |user_bin|
+      if !unique_user_id.include?(user_bin.user_id)
+        unique_user_id << user_bin.user_id
+
+        user = User.find_by(id: user_bin.user_id)
+        dist = user.total_distance_travelled
+        dist_travelled_all_users_array << [user.id, dist]
+      end
+    end
+
+
     user_bins.each do |user_bin|
       # dist_trav_user_hash = []
       user = User.find_by(id: user_bin.user_id)
