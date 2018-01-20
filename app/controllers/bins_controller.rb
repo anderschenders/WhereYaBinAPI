@@ -8,9 +8,15 @@ class BinsController < ApplicationController
 
     all_bins = Bin.all
 
+    user_lat = params[:user_lat].to_f
+    user_lng = params[:user_lng].to_f
+
+    # only send back bins within certain distance from user
+    filtered_bins = all_bins.select { |bin| distance_between_two_points(user_lat, user_lng, bin.latitude, bin.longitude) < 1 }
+
     #organize all_bins into arrays of arrays with same locations together
     unique = true
-    all_bins_arrays = all_bins.each_slice(1).to_a
+    all_bins_arrays = filtered_bins.each_slice(1).to_a
     unique_locations_format = []
 
     all_bins_arrays.each do |bin|
@@ -38,6 +44,7 @@ class BinsController < ApplicationController
       end
       all_bins_formatted << hash
     end
+
 
     render status: :ok, json: all_bins_formatted
 
