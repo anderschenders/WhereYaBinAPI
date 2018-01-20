@@ -43,12 +43,12 @@ class UserBinsController < ApplicationController
     end
 
 
-    user_bins.each do |user_bin|
-      # dist_trav_user_hash = []
-      user = User.find_by(id: user_bin.user_id)
-      dist = user.total_distance_travelled
-      dist_travelled_all_users_array << [user.id, dist]
-    end
+    # user_bins.each do |user_bin|
+    #   # dist_trav_user_hash = []
+    #   user = User.find_by(id: user_bin.user_id)
+    #   dist = user.total_distance_travelled
+    #   dist_travelled_all_users_array << [user.id, dist]
+    # end
 
     # user who travelled the most
     most_travelled = dist_travelled_all_users_array[0]
