@@ -1,4 +1,8 @@
+require 'distance'
+
 class UserBinsController < ApplicationController
+
+  include Distance
 
   def community_data
     # count for all Users registered
@@ -125,13 +129,25 @@ class UserBinsController < ApplicationController
   def create
 
     @user = User.find_by(id: params[:user_id])
-    @user.bin_count += 1
-    @user.save
+
+    # for missing and full bin actions, don't allow if user is not at the location
+    user_lat = params[:user_lat].to_f
+    user_lng = params[:user_lng].to_f
+    user_action = params[:user_action]
 
     bin = Bin.find_by(id: params[:bin_id])
     bin_latitude = bin.latitude
     bin_longitude = bin.longitude
+
+    if ((user_action == 'missing' || user_action == 'full') && (distance_between_two_points(user_lat, user_lng, bin_latitude, bin_longitude) > 0.04))
+      render status: :bad_request, json: { errors: "You must be at the bin location to report it as #{user_action}"}
+      return
+    end
+
     # add count to bin? First gotta make a new column
+
+    @user.bin_count += 1
+    @user.save
 
     # TODO: error handling if can't find user or bin
 
