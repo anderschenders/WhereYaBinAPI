@@ -12,7 +12,7 @@ class BinsController < ApplicationController
     user_lng = params[:user_lng].to_f
 
     # only send back bins within certain distance from user
-    filtered_bins = all_bins.select { |bin| distance_between_two_points(user_lat, user_lng, bin.latitude, bin.longitude) < 0.6 }
+    filtered_bins = all_bins.select { |bin| distance_between_two_points(user_lat, user_lng, bin.latitude, bin.longitude) < 0.3 }
 
     #organize all_bins into arrays of arrays with same locations together
     unique = true
