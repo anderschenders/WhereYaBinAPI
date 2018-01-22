@@ -54,12 +54,11 @@ class BinsController < ApplicationController
 
     all_bins = Bin.all
     @user = User.find_by(id: params[:user_id])
-    new_location = all_bins.last.location + 1
-
-    # check that there isn't a bin of this type already at this location
     new_lat = params[:latitude].to_f
     new_lng = params[:longitude].to_f
     bin_type = params[:bin_type]
+
+    new_location = all_bins.last.location + 1
 
     rec_already_there = false
     rec_already_there_lat = nil
@@ -71,8 +70,11 @@ class BinsController < ApplicationController
     gar_already_there_lng = nil
     gar_already_there_loc = nil
 
+    user_message = nil
+
     if bin_type != "BOTH" #bin_type = GPUBL or RYPUBL
 
+      # check that there isn't a bin of this type already at this location
       all_bins.each do |bin|
         # TODO: why doesn't the below work?
         # dist_btwn_bins = Distance::distance_between_two_points(new_lat, new_lng, bin.latitude, bin.longitude)
@@ -81,6 +83,61 @@ class BinsController < ApplicationController
         if (bin.bin_type == bin_type) && (dist_btwn_bins < 0.003)
           render status: :bad_request, json: { errors: "There is already that type of bin there!" }
           return
+        elsif (bin.bin_type != bin_type) && (bin.latitude == new_lat) && (bin.longitude == new_lng)
+          # there is a bin of a different type at the exact same location
+          # give same location id as bin already there
+          new_bin = Bin.new(
+            bin_type: bin_type,
+            latitude: new_lat,
+            longitude: new_lng,
+            created_by: @user,
+            location: bin.location
+          )
+
+          if new_bin.save
+
+            new_user_bin = UserBin.new(
+              user_id: params[:user_id],
+              bin_id: new_bin.id,
+              action: 'add',
+              user_lat: new_lat,
+              user_lng: new_lng
+            )
+
+            if new_user_bin.save
+
+              @user.reload
+              @user.bin_count += 1
+              @user.save
+
+              user_stats = user_stats(@user)
+
+              json_response = {
+                new_user_bin: new_user_bin,
+                user: @user,
+                total_dist: user_stats[:total_distance_travelled],
+                user_message: user_message,
+                user_bins: user_stats[:user_bins_formatted],
+                use_total: user_stats[:user_bins_use_total],
+                total_rec: user_stats[:user_bins_total_rec],
+                total_gar: user_stats[:user_bins_total_gar],
+                total_reports: user_stats[:user_bins_total_reports],
+                full_reports: user_stats[:user_bins_full_reports],
+                missing_reports: user_stats[:user_bins_missing_reports],
+                add_reports: user_stats[:user_bins_add_reports]
+              }
+
+              render status: :ok, json: json_response
+              return
+            else
+              render status: :bad_request, json: { errors: new_user_bin.errors }
+              return
+            end
+
+          else
+            render status: :bad_request, json: { errors: new_bin.errors }
+            return
+          end
         end
       end
 
@@ -103,8 +160,6 @@ class BinsController < ApplicationController
           gar_already_there_loc = bin.location
         end
       end
-
-      user_message = nil
 
       if rec_already_there && gar_already_there
         render status: :bad_request, json: { errors: "There are already garbage and recycling bins there!" }
@@ -146,66 +201,26 @@ class BinsController < ApplicationController
           )
 
           if new_user_bin.save
-            # get total distance user has travelled
+
             @user.reload
             @user.bin_count += 1
             @user.save
 
-            total_distance_travelled = @user.total_distance_travelled
-
-            #get all user_bins
-            user_bins_formatted = get_user_bins(@user)
-
-            # user total
-            user_bins_use = user_bins_formatted.select { |user_bin| user_bin["action"] == "use" }
-
-            user_bins_use_total = user_bins_use.count
-
-            # recycling total
-            user_bins_rec = user_bins_use.select { |user_bin|
-              user_bin["bin_type"] == "RYPUBL" }
-
-            user_bins_total_rec = user_bins_rec.count
-
-            # garbage total
-            user_bins_gar = user_bins_use.select { |user_bin|
-              user_bin["bin_type"] == "GPUBL" }
-
-            user_bins_total_gar = user_bins_gar.count
-
-            # report total
-            user_bins_reports = user_bins_formatted.select { |user_bin| user_bin["action"] == "full" || user_bin["action"] == "missing" || user_bin["action"] == "add" }
-
-            user_bins_total_reports = user_bins_reports.count
-
-            # full total
-            user_bins_full = user_bins_reports.select { |user_bin| user_bin["action"] == "full"}
-
-            user_bins_full_reports = user_bins_full.count
-
-            # missing total
-            user_bins_missing = user_bins_reports.select { |user_bin| user_bin["action"] == "missing" }
-
-            user_bins_missing_reports = user_bins_missing.count
-
-            # add total
-            user_bins_add = user_bins_reports.select { |user_bin| user_bin["action"] == "add" }
-
-            user_bins_add_reports = user_bins_add.count
+            user_stats = user_stats(@user)
 
             json_response = {
               new_user_bin: new_garb_bin,
               user: @user,
-              total_dist: total_distance_travelled,
+              total_dist: user_stats[:total_distance_travelled],
               user_message: user_message,
-              user_bins: user_bins_formatted,
-              use_total: user_bins_use_total,
-              total_rec: user_bins_total_rec,
-              total_gar: user_bins_total_gar,
-              total_reports: user_bins_total_reports,
-              full_reports: user_bins_full_reports,
-              missing_reports: user_bins_missing_reports,
-              add_reports: user_bins_add_reports
+              user_bins: user_stats[:user_bins_formatted],
+              use_total: user_stats[:user_bins_use_total],
+              total_rec: user_stats[:user_bins_total_rec],
+              total_gar: user_stats[:user_bins_total_gar],
+              total_reports: user_stats[:user_bins_total_reports],
+              full_reports: user_stats[:user_bins_full_reports],
+              missing_reports: user_stats[:user_bins_missing_reports],
+              add_reports: user_stats[:user_bins_add_reports]
             }
 
             render status: :ok, json: json_response
@@ -256,66 +271,26 @@ class BinsController < ApplicationController
           )
 
           if new_user_bin.save
-            # get total distance user has travelled
+
             @user.reload
             @user.bin_count += 1
             @user.save
 
-            total_distance_travelled = @user.total_distance_travelled
-
-            #get all user_bins
-            user_bins_formatted = get_user_bins(@user)
-
-            # user total
-            user_bins_use = user_bins_formatted.select { |user_bin| user_bin["action"] == "use" }
-
-            user_bins_use_total = user_bins_use.count
-
-            # recycling total
-            user_bins_rec = user_bins_use.select { |user_bin|
-              user_bin["bin_type"] == "RYPUBL" }
-
-            user_bins_total_rec = user_bins_rec.count
-
-            # garbage total
-            user_bins_gar = user_bins_use.select { |user_bin|
-              user_bin["bin_type"] == "GPUBL" }
-
-            user_bins_total_gar = user_bins_gar.count
-
-            # report total
-            user_bins_reports = user_bins_formatted.select { |user_bin| user_bin["action"] == "full" || user_bin["action"] == "missing" || user_bin["action"] == "add" }
-
-            user_bins_total_reports = user_bins_reports.count
-
-            # full total
-            user_bins_full = user_bins_reports.select { |user_bin| user_bin["action"] == "full"}
-
-            user_bins_full_reports = user_bins_full.count
-
-            # missing total
-            user_bins_missing = user_bins_reports.select { |user_bin| user_bin["action"] == "missing" }
-
-            user_bins_missing_reports = user_bins_missing.count
-
-            # add total
-            user_bins_add = user_bins_reports.select { |user_bin| user_bin["action"] == "add" }
-
-            user_bins_add_reports = user_bins_add.count
+            user_stats = user_stats(@user)
 
             json_response = {
               new_user_bin: new_user_bin,
               user: @user,
-              total_dist: total_distance_travelled,
+              total_dist: user_stats[:total_distance_travelled],
               user_message: user_message,
-              user_bins: user_bins_formatted,
-              use_total: user_bins_use_total,
-              total_rec: user_bins_total_rec,
-              total_gar: user_bins_total_gar,
-              total_reports: user_bins_total_reports,
-              full_reports: user_bins_full_reports,
-              missing_reports: user_bins_missing_reports,
-              add_reports: user_bins_add_reports
+              user_bins: user_stats[:user_bins_formatted],
+              use_total: user_stats[:user_bins_use_total],
+              total_rec: user_stats[:user_bins_total_rec],
+              total_gar: user_stats[:user_bins_total_gar],
+              total_reports: user_stats[:user_bins_total_reports],
+              full_reports: user_stats[:user_bins_full_reports],
+              missing_reports: user_stats[:user_bins_missing_reports],
+              add_reports: user_stats[:user_bins_add_reports]
             }
 
             render status: :ok, json: json_response
@@ -326,13 +301,11 @@ class BinsController < ApplicationController
           end
         else
           render status: :bad_request, json: { errors: new_rec_bin.errors }
+          return
         end
 
       end
     end
-
-    # new_location = all_bins.last.location + 1
-    # @user = User.find_by(id: params[:user_id])
 
     if params[:bin_type] == "BOTH" && !(rec_already_there) && !(gar_already_there)
       # create two new bins
@@ -371,66 +344,26 @@ class BinsController < ApplicationController
         )
 
         if (new_user_bin.save && new_user_bin2.save)
-          # get total distance user has travelled
+
           @user.reload
           @user.bin_count += 2
           @user.save
 
-          total_distance_travelled = @user.total_distance_travelled
-
-          #get all user_bins
-          user_bins_formatted = get_user_bins(@user)
-
-          # user total
-          user_bins_use = user_bins_formatted.select { |user_bin| user_bin["action"] == "use" }
-
-          user_bins_use_total = user_bins_use.count
-
-          # recycling total
-          user_bins_rec = user_bins_use.select { |user_bin|
-            user_bin["bin_type"] == "RYPUBL" }
-
-          user_bins_total_rec = user_bins_rec.count
-
-          # garbage total
-          user_bins_gar = user_bins_use.select { |user_bin|
-            user_bin["bin_type"] == "GPUBL" }
-
-          user_bins_total_gar = user_bins_gar.count
-
-          # report total
-          user_bins_reports = user_bins_formatted.select { |user_bin| user_bin["action"] == "full" || user_bin["action"] == "missing" || user_bin["action"] == "add" }
-
-          user_bins_total_reports = user_bins_reports.count
-
-          # full total
-          user_bins_full = user_bins_reports.select { |user_bin| user_bin["action"] == "full"}
-
-          user_bins_full_reports = user_bins_full.count
-
-          # missing total
-          user_bins_missing = user_bins_reports.select { |user_bin| user_bin["action"] == "missing" }
-
-          user_bins_missing_reports = user_bins_missing.count
-
-          # add total
-          user_bins_add = user_bins_reports.select { |user_bin| user_bin["action"] == "add" }
-
-          user_bins_add_reports = user_bins_add.count
+          user_stats = user_stats(@user)
 
           json_response = {
             new_user_bin: [new_user_bin, new_user_bin2],
             user: @user,
-            total_dist: total_distance_travelled,
+            total_dist: user_stats[:total_distance_travelled],
             user_message: user_message,
-            user_bins: user_bins_formatted,
-            use_total: user_bins_use_total,
-            total_rec: user_bins_total_rec,
-            total_gar: user_bins_total_gar,
-            total_reports: user_bins_total_reports,
-            full_reports: user_bins_full_reports,
-            missing_reports: user_bins_missing_reports,
-            add_reports: user_bins_add_reports
+            user_bins: user_stats[:user_bins_formatted],
+            use_total: user_stats[:user_bins_use_total],
+            total_rec: user_stats[:user_bins_total_rec],
+            total_gar: user_stats[:user_bins_total_gar],
+            total_reports: user_stats[:user_bins_total_reports],
+            full_reports: user_stats[:user_bins_full_reports],
+            missing_reports: user_stats[:user_bins_missing_reports],
+            add_reports: user_stats[:user_bins_add_reports]
           }
 
           render status: :ok, json: json_response
@@ -443,219 +376,6 @@ class BinsController < ApplicationController
         render status: :bad_request, json: { errors: [new_garb_bin.errors, new_rec_bin.errors] }
         return
       end
-
-
-    # elsif params[:bin_type] == "BOTH" && rec_already_there
-    #   # only create new garbage bin
-    #
-    #   # if lat+lng is exactly the same, give same location id
-    #   if (new_lat == rec_already_there_lat) && (params[:longitude] == rec_already_there_lng)
-    #
-    #     new_garb_bin = Bin.new(
-    #     bin_type: "GPUBL",
-    #     latitude: params[:latitude],
-    #     longitude: params[:longitude],
-    #     created_by: @user,
-    #     location: rec_already_there_loc
-    #   )
-    #
-    #   else
-    #     # give new location id
-    #     new_garb_bin = Bin.new(
-    #       bin_type: "GPUBL",
-    #       latitude: params[:latitude],
-    #       longitude: params[:longitude],
-    #       created_by: @user,
-    #       location: new_location
-    #     )
-    #   end
-    #
-    #   if new_garb_bin.save
-    #
-    #     new_user_bin = UserBin.new(
-    #       user_id: params[:user_id],
-    #       bin_id: new_garb_bin.id,
-    #       action: 'add',
-    #       user_lat: params[:latitude],
-    #       user_lng: params[:longitude]
-    #     )
-    #
-    #     if new_user_bin.save
-    #       # get total distance user has travelled
-    #       @user.reload
-    #       @user.bin_count += 1
-    #       @user.save
-    #
-    #       total_distance_travelled = @user.total_distance_travelled
-    #
-    #       #get all user_bins
-    #       user_bins_formatted = get_user_bins(@user)
-    #
-    #       # user total
-    #       user_bins_use = user_bins_formatted.select { |user_bin| user_bin["action"] == "use" }
-    #
-    #       user_bins_use_total = user_bins_use.count
-    #
-    #       # recycling total
-    #       user_bins_rec = user_bins_use.select { |user_bin|
-    #         user_bin["bin_type"] == "RYPUBL" }
-    #
-    #       user_bins_total_rec = user_bins_rec.count
-    #
-    #       # garbage total
-    #       user_bins_gar = user_bins_use.select { |user_bin|
-    #         user_bin["bin_type"] == "GPUBL" }
-    #
-    #       user_bins_total_gar = user_bins_gar.count
-    #
-    #       # report total
-    #       user_bins_reports = user_bins_formatted.select { |user_bin| user_bin["action"] == "full" || user_bin["action"] == "missing" || user_bin["action"] == "add" }
-    #
-    #       user_bins_total_reports = user_bins_reports.count
-    #
-    #       # full total
-    #       user_bins_full = user_bins_reports.select { |user_bin| user_bin["action"] == "full"}
-    #
-    #       user_bins_full_reports = user_bins_full.count
-    #
-    #       # missing total
-    #       user_bins_missing = user_bins_reports.select { |user_bin| user_bin["action"] == "missing" }
-    #
-    #       user_bins_missing_reports = user_bins_missing.count
-    #
-    #       # add total
-    #       user_bins_add = user_bins_reports.select { |user_bin| user_bin["action"] == "add" }
-    #
-    #       user_bins_add_reports = user_bins_add.count
-    #
-    #       json_response = {
-    #         new_user_bin: [new_user_bin, new_user_bin2],
-    #         user: @user,
-    #         total_dist: total_distance_travelled,
-    #         user_message: user_message,
-    #         user_bins: user_bins_formatted,
-    #         use_total: user_bins_use_total,
-    #         total_rec: user_bins_total_rec,
-    #         total_gar: user_bins_total_gar,
-    #         total_reports: user_bins_total_reports,
-    #         full_reports: user_bins_full_reports,
-    #         missing_reports: user_bins_missing_reports,
-    #         add_reports: user_bins_add_reports
-    #       }
-    #
-    #       render status: :ok, json: json_response
-    #     else
-    #       render status: :bad_request, json: { errors: new_user_bin.errors }
-    #     end
-    #   else
-    #     render status: :bad_request, json: { errors: new_garb_bin.errors }
-    #   end
-
-    # elsif params[:bin_type] == "BOTH" && gar_already_there
-    #   # only create new recycling bin
-    #
-    #   # if lat+lng is exactly the same, give same location id
-    #   if (params[:latitude] == gar_already_there_lat) && (params[:longitude] == gar_already_there_lng)
-    #
-    #     new_rec_bin = Bin.new(
-    #       bin_type: "RYPUBL",
-    #       latitude: params[:latitude],
-    #       longitude: params[:longitude],
-    #       created_by: @user,
-    #       location: gar_already_there_loc
-    #     )
-    #
-    #   else
-    #     # give new location id
-    #     new_rec_bin = Bin.new(
-    #       bin_type: "RYPUBL",
-    #       latitude: params[:latitude],
-    #       longitude: params[:longitude],
-    #       created_by: @user,
-    #       location: new_location
-    #     )
-    #   end
-    #
-    #   if new_rec_bin.save
-    #
-    #     new_user_bin = UserBin.new(
-    #       user_id: params[:user_id],
-    #       bin_id: new_rec_bin.id,
-    #       action: 'add',
-    #       user_lat: params[:latitude],
-    #       user_lng: params[:longitude]
-    #     )
-    #
-    #     if new_user_bin.save
-    #       # get total distance user has travelled
-    #       @user.reload
-    #       @user.bin_count += 1
-    #       @user.save
-    #
-    #       total_distance_travelled = @user.total_distance_travelled
-    #
-    #       #get all user_bins
-    #       user_bins_formatted = get_user_bins(@user)
-    #
-    #       # user total
-    #       user_bins_use = user_bins_formatted.select { |user_bin| user_bin["action"] == "use" }
-    #
-    #       user_bins_use_total = user_bins_use.count
-    #
-    #       # recycling total
-    #       user_bins_rec = user_bins_use.select { |user_bin|
-    #         user_bin["bin_type"] == "RYPUBL" }
-    #
-    #       user_bins_total_rec = user_bins_rec.count
-    #
-    #       # garbage total
-    #       user_bins_gar = user_bins_use.select { |user_bin|
-    #         user_bin["bin_type"] == "GPUBL" }
-    #
-    #       user_bins_total_gar = user_bins_gar.count
-    #
-    #       # report total
-    #       user_bins_reports = user_bins_formatted.select { |user_bin| user_bin["action"] == "full" || user_bin["action"] == "missing" || user_bin["action"] == "add" }
-    #
-    #       user_bins_total_reports = user_bins_reports.count
-    #
-    #       # full total
-    #       user_bins_full = user_bins_reports.select { |user_bin| user_bin["action"] == "full"}
-    #
-    #       user_bins_full_reports = user_bins_full.count
-    #
-    #       # missing total
-    #       user_bins_missing = user_bins_reports.select { |user_bin| user_bin["action"] == "missing" }
-    #
-    #       user_bins_missing_reports = user_bins_missing.count
-    #
-    #       # add total
-    #       user_bins_add = user_bins_reports.select { |user_bin| user_bin["action"] == "add" }
-    #
-    #       user_bins_add_reports = user_bins_add.count
-    #
-    #       json_response = {
-    #         new_user_bin: [new_user_bin, new_user_bin2],
-    #         user: @user,
-    #         total_dist: total_distance_travelled,
-    #         user_message: user_message,
-    #         user_bins: user_bins_formatted,
-    #         use_total: user_bins_use_total,
-    #         total_rec: user_bins_total_rec,
-    #         total_gar: user_bins_total_gar,
-    #         total_reports: user_bins_total_reports,
-    #         full_reports: user_bins_full_reports,
-    #         missing_reports: user_bins_missing_reports,
-    #         add_reports: user_bins_add_reports
-    #       }
-    #
-    #       render status: :ok, json: json_response
-    #     else
-    #       render status: :bad_request, json: { errors: new_user_bin.errors }
-    #     end
-      # else
-      #   render status: :bad_request, json: { errors: new_rec_bin.errors }
-      # end
 
     else
       # create one new bin
@@ -678,65 +398,26 @@ class BinsController < ApplicationController
         )
 
         if new_user_bin.save
-          # get total distance user has travelled
+
           @user.reload
           @user.bin_count += 1
           @user.save
 
-          total_distance_travelled = @user.total_distance_travelled
-
-          #get all user_bins
-          user_bins_formatted = get_user_bins(@user)
-
-          # user total
-          user_bins_use = user_bins_formatted.select { |user_bin| user_bin["action"] == "use" }
-
-          user_bins_use_total = user_bins_use.count
-
-          # recycling total
-          user_bins_rec = user_bins_use.select { |user_bin|
-            user_bin["bin_type"] == "RYPUBL" }
-
-          user_bins_total_rec = user_bins_rec.count
-
-          # garbage total
-          user_bins_gar = user_bins_use.select { |user_bin|
-            user_bin["bin_type"] == "GPUBL" }
-
-          user_bins_total_gar = user_bins_gar.count
-
-          # report total
-          user_bins_reports = user_bins_formatted.select { |user_bin| user_bin["action"] == "full" || user_bin["action"] == "missing" || user_bin["action"] == "add" }
-
-          user_bins_total_reports = user_bins_reports.count
-
-          # full total
-          user_bins_full = user_bins_reports.select { |user_bin| user_bin["action"] == "full"}
-
-          user_bins_full_reports = user_bins_full.count
-
-          # missing total
-          user_bins_missing = user_bins_reports.select { |user_bin| user_bin["action"] == "missing" }
-
-          user_bins_missing_reports = user_bins_missing.count
-
-          # add total
-          user_bins_add = user_bins_reports.select { |user_bin| user_bin["action"] == "add" }
-
-          user_bins_add_reports = user_bins_add.count
+          user_stats = user_stats(@user)
 
           json_response = {
             new_user_bin: new_user_bin,
             user: @user,
-            total_dist: total_distance_travelled,
-            user_bins: user_bins_formatted,
-            use_total: user_bins_use_total,
-            total_rec: user_bins_total_rec,
-            total_gar: user_bins_total_gar,
-            total_reports: user_bins_total_reports,
-            full_reports: user_bins_full_reports,
-            missing_reports: user_bins_missing_reports,
-            add_reports: user_bins_add_reports
+            total_dist: user_stats[:total_distance_travelled],
+            user_message: user_message,
+            user_bins: user_stats[:user_bins_formatted],
+            use_total: user_stats[:user_bins_use_total],
+            total_rec: user_stats[:user_bins_total_rec],
+            total_gar: user_stats[:user_bins_total_gar],
+            total_reports: user_stats[:user_bins_total_reports],
+            full_reports: user_stats[:user_bins_full_reports],
+            missing_reports: user_stats[:user_bins_missing_reports],
+            add_reports: user_stats[:user_bins_add_reports]
           }
 
           render status: :ok, json: json_response
@@ -768,36 +449,63 @@ class BinsController < ApplicationController
     return user_bins_formatted
   end
 
-  # def get_user_bins(user)
-  #   user_bins = UserBin.where(user_id: @user.id)
-  #   user_bins_sorted = user_bins.order(:created_at).reverse
-  #
-  #   user_bins_array = user_bins_sorted.each_slice(1).to_a
-  #
-  #   user_bins_array.each do |user_bin|
-  #     bin = Bin.find_by(id: user_bin[0].bin_id)
-  #     if bin.bin_type == "RYPUBL"
-  #       user_bin << { "bin_type" => "RECYCLING" }
-  #     else
-  #       user_bin << { "bin_type" => "GARBAGE" }
-  #     end
-  #   end
-  #
-  #   return user_bins_array
-  # end
+  def user_stats(user)
 
-  # def distance_between_two_points(lat1, lon1, lat2, lon2)
-  #
-  #   radlat1 = Math::PI * (lat1 / 180)
-  #   radlat2 = Math::PI * (lat2 / 180)
-  #   theta = lon1 - lon2
-  #   radtheta = Math::PI * (theta / 180)
-  #   dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta)
-  #   dist = Math.acos(dist)
-  #   dist = dist * (180 / Math::PI)
-  #   dist = dist * 60 * 1.1515
-  #   # if (unit=="K") { dist = dist * 1.609344 }
-  #   # if (unit=="N") { dist = dist * 0.8684 }
-  #   return dist
-  # end
+    total_distance_travelled = user.total_distance_travelled
+
+    #get all user_bins
+    user_bins_formatted = get_user_bins(user)
+
+    # user total
+    user_bins_use = user_bins_formatted.select { |user_bin| user_bin["action"] == "use" }
+
+    user_bins_use_total = user_bins_use.count
+
+    # recycling total
+    user_bins_rec = user_bins_use.select { |user_bin|
+      user_bin["bin_type"] == "RYPUBL" }
+
+    user_bins_total_rec = user_bins_rec.count
+
+    # garbage total
+    user_bins_gar = user_bins_use.select { |user_bin|
+      user_bin["bin_type"] == "GPUBL" }
+
+    user_bins_total_gar = user_bins_gar.count
+
+    # report total
+    user_bins_reports = user_bins_formatted.select { |user_bin| user_bin["action"] == "full" || user_bin["action"] == "missing" || user_bin["action"] == "add" }
+
+    user_bins_total_reports = user_bins_reports.count
+
+    # full total
+    user_bins_full = user_bins_reports.select { |user_bin| user_bin["action"] == "full"}
+
+    user_bins_full_reports = user_bins_full.count
+
+    # missing total
+    user_bins_missing = user_bins_reports.select { |user_bin| user_bin["action"] == "missing" }
+
+    user_bins_missing_reports = user_bins_missing.count
+
+    # add total
+    user_bins_add = user_bins_reports.select { |user_bin| user_bin["action"] == "add" }
+
+    user_bins_add_reports = user_bins_add.count
+
+    data_object = {
+      total_distance_travelled: total_distance_travelled,
+      user_bins_formatted: user_bins_formatted,
+      user_bins_use_total: user_bins_use_total,
+      user_bins_total_rec: user_bins_total_rec,
+      user_bins_total_gar: user_bins_total_gar,
+      user_bins_total_reports: user_bins_total_reports,
+      user_bins_full_reports: user_bins_full_reports,
+      user_bins_missing_reports: user_bins_missing_reports,
+      user_bins_add_reports: user_bins_add_reports
+    }
+
+    return data_object
+  end
+
 end
