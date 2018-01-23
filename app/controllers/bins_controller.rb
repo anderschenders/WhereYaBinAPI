@@ -380,7 +380,7 @@ class BinsController < ApplicationController
     else
       # create one new bin
       new_bin = Bin.new(
-        bin_type: params[:bin_type],
+        bin_type: bin_type,
         latitude: new_lat,
         longitude: new_lng,
         created_by: @user,
