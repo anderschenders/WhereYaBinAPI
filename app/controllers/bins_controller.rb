@@ -1,10 +1,10 @@
 require 'distance'
-require 'user_stats'
+require 'user_data'
 
 class BinsController < ApplicationController
 
   include Distance
-  include UserStats
+  include UserData
 
   def index
 
@@ -85,7 +85,13 @@ class BinsController < ApplicationController
         if (bin.bin_type == bin_type) && (dist_btwn_bins < 0.003)
           render status: :bad_request, json: { errors: "There is already that type of bin there!" }
           return
-        elsif (bin.bin_type != bin_type) && (bin.latitude == new_lat) && (bin.longitude == new_lng)
+
+        end
+      end
+
+      all_bins.each do |bin|
+
+        if (bin.bin_type != bin_type) && (bin.latitude == new_lat) && (bin.longitude == new_lng)
           # there is a bin of a different type at the exact same location
           # give same location id as bin already there
           new_bin = Bin.new(
@@ -433,21 +439,21 @@ class BinsController < ApplicationController
     end
   end
 
-  private
-
-  def get_user_bins(user)
-    user_bins = UserBin.where(user_id: user.id)
-    user_bins_sorted = user_bins.order(:created_at).reverse
-
-
-    user_bins_formatted = []
-    user_bins_sorted.each do |user_bin|
-      bin = Bin.find_by(id: user_bin.bin_id)
-      user_bin_attributes = user_bin.attributes
-      user_bin_attributes["bin_type"] = bin.bin_type
-      user_bins_formatted << user_bin_attributes
-    end
-
-    return user_bins_formatted
-  end
+  # private
+  #
+  # def get_user_bins(user)
+  #   user_bins = UserBin.where(user_id: user.id)
+  #   user_bins_sorted = user_bins.order(:created_at).reverse
+  #
+  #
+  #   user_bins_formatted = []
+  #   user_bins_sorted.each do |user_bin|
+  #     bin = Bin.find_by(id: user_bin.bin_id)
+  #     user_bin_attributes = user_bin.attributes
+  #     user_bin_attributes["bin_type"] = bin.bin_type
+  #     user_bins_formatted << user_bin_attributes
+  #   end
+  #
+  #   return user_bins_formatted
+  # end
 end

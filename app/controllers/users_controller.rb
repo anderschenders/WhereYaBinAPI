@@ -1,11 +1,34 @@
-require 'user_stats'
+require 'user_data'
+require 'firebase_admin'
 
 class UsersController < ApplicationController
 
-  include UserStats
+  include UserData
+
+  def auth
+    new_auth = FirebaseAdmin::Auth.instance
+    id_token = params[:token]
+    result = new_auth.verify_id_token(id_token)
+
+    puts result
+
+    # check if user is already registered
+    uid = result[0]["user_id"];
+    puts uid
+    @user = User.find_by(uid: uid)
+
+    
+
+    json_response = {
+      result: result,
+    }
+
+    render status: :ok, json: json_response
+  end
 
   def index
     @user = User.find_by(email: params[:email], password: params[:password])
+    # @user = User.find_by(token: params[:token])
     if @user
 
       user_stats = user_stats(@user)
@@ -64,20 +87,20 @@ class UsersController < ApplicationController
   end
 end
 
-private
-
-def get_user_bins(user)
-  user_bins = UserBin.where(user_id: user.id)
-  user_bins_sorted = user_bins.order(:created_at).reverse
-
-
-  user_bins_formatted = []
-  user_bins_sorted.each do |user_bin|
-    bin = Bin.find_by(id: user_bin.bin_id)
-    user_bin_attributes = user_bin.attributes
-    user_bin_attributes["bin_type"] = bin.bin_type
-    user_bins_formatted << user_bin_attributes
-  end
-
-  return user_bins_formatted
-end
+# private
+#
+# def get_user_bins(user)
+#   user_bins = UserBin.where(user_id: user.id)
+#   user_bins_sorted = user_bins.order(:created_at).reverse
+#
+#
+#   user_bins_formatted = []
+#   user_bins_sorted.each do |user_bin|
+#     bin = Bin.find_by(id: user_bin.bin_id)
+#     user_bin_attributes = user_bin.attributes
+#     user_bin_attributes["bin_type"] = bin.bin_type
+#     user_bins_formatted << user_bin_attributes
+#   end
+#
+#   return user_bins_formatted
+# end

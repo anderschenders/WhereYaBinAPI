@@ -12,4 +12,6 @@ Rails.application.routes.draw do
 
   get '/user_bins/community_data', to: 'user_bins#community_data', as: 'community_data'
 
+  get '/users/auth', to: 'users#auth', as: 'auth'
+
 end

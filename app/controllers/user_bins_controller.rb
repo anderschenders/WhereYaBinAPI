@@ -1,10 +1,10 @@
 require 'distance'
-require 'user_stats'
+require 'user_data'
 
 class UserBinsController < ApplicationController
 
   include Distance
-  include UserStats
+  include UserData
 
   def community_data
     # count for all Users registered
@@ -145,7 +145,7 @@ class UserBinsController < ApplicationController
       @user.reload
 
       user_stats = user_stats(@user)
-    
+
       json_response = {
         new_user_bin: new_user_bin,
         user: @user,
@@ -169,22 +169,22 @@ class UserBinsController < ApplicationController
 
   end
 
-  private
-
-  def get_user_bins(user)
-    user_bins = UserBin.where(user_id: user.id)
-    user_bins_sorted = user_bins.order(:created_at).reverse
-
-
-    user_bins_formatted = []
-    user_bins_sorted.each do |user_bin|
-      bin = Bin.find_by(id: user_bin.bin_id)
-      user_bin_attributes = user_bin.attributes
-      user_bin_attributes["bin_type"] = bin.bin_type
-      user_bins_formatted << user_bin_attributes
-    end
-
-    return user_bins_formatted
-  end
+  # private
+  #
+  # def get_user_bins(user)
+  #   user_bins = UserBin.where(user_id: user.id)
+  #   user_bins_sorted = user_bins.order(:created_at).reverse
+  #
+  #
+  #   user_bins_formatted = []
+  #   user_bins_sorted.each do |user_bin|
+  #     bin = Bin.find_by(id: user_bin.bin_id)
+  #     user_bin_attributes = user_bin.attributes
+  #     user_bin_attributes["bin_type"] = bin.bin_type
+  #     user_bins_formatted << user_bin_attributes
+  #   end
+  #
+  #   return user_bins_formatted
+  # end
 
 end
