@@ -1,24 +1,29 @@
-# README
+# WhereYa, Bin? API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This is a Ruby on Rails API used with the react-native app [WhereYa, Bin?](https://github.com/anderschenders/WhereYaBin) to save user information.
 
-Things you may want to cover:
+#### Installation
 
-* Ruby version
+1. Clone this repo.
+```git clone https://github.com/anderschenders/WhereYaBinAPI.git```
 
-* System dependencies
+2. Check it out:
+```
+cd WhereYaBinAPI
+```
 
-* Configuration
+3. Make sure you have Rails installed. This project runs v5.1.4.
 
-* Database creation
+4. Start up your Rails server. 
+```
+rails server 
+```
+5. Go to ```http://localhost:3000``` and you'll see: "Yay! You’re on Rails!"
 
-* Database initialization
+#### Routes 
 
-* How to run the test suite
+Retrieve all users 
+* GET
+* ```'/users/'```
 
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+...more to be added soon...
